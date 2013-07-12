@@ -1,11 +1,41 @@
-###########################################################################
-#                            TextMate Snippets                            #
-###########################################################################
-snippet beginend "$1.begin(), $1.end() (beginend)"
-${1:v}${1/^.*?(-)?(>)?$/(?2::(?1:>:.))/}begin(), $1${1/^.*?(-)?(>)?$/(?2::(?1:>:.))/}end()
+extends c
+
+##################
+#  C++ Snippets  #
+##################
+
+global !p
+
+import re
+def get_args(arglist):
+    args = [arg.split(' ')[-1] for arg in arglist.split(',') if arg]
+    pattern = re.compile('\W+', re.L)
+    args = [ pattern.sub('', arg) for arg in args ]
+
+    return args
+
+def format_arg(arg):
+    return "@param [in] %s TODO: description" % arg
+
+def format_args(args):
+    retval = [format_arg(arg) for arg in args if arg != '']
+    return retval
+
+endglobal
+
+snippet ns "namespace .. (namespace)" !
+namespace${1/.+/ /m}${1:`!p snip.rv = snip.basename or "name"`}
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}${1/.+/ \/* /m}end of namespace: $1${1/.+/ *\/ /m}
 endsnippet
 
-snippet cl "class .. (class)"
+snippet cld "class .. (class with doxygen comments)"
+/** ${3:TODO: Brief Description}.
+  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+
+  ${4:TODO: Long Description}
+ */
 class ${1:`!p snip.rv = snip.basename or "name"`}
 {
 public:
@@ -17,34 +47,173 @@ private:
 };
 endsnippet
 
-snippet ns "namespace .. (namespace)"
-namespace${1/.+/ /m}${1:`!p snip.rv = snip.basename or "name"`}
+snippet mfn "Member Function definition" !
+/** ${5:TODO: Brief Description}.
+  @ingroup ${6:`!p snip.rv = ( fn or "name")`}
+
+  ${7:TODO: Long Description}
+  `!p
+if t[2] != "/*arguments*/":
+    args = get_args(t[2])
+    args = format_args(args)
+    snip >> 1
+    for arg in args:
+        snip += arg
+else:
+    snip.rv = ""`
+  `!p
+snip >> 1
+if (t[3] not in ["void", ""]):
+    snip += "@return TODO"`
+ */
+${4:void} ${2:`!p snip.rv = ( fn or "name")$1(${3:/*arguments*/})
 {
-	$0
-}${1/.+/ \/* /m}$1${1/.+/ *\/ /m}
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
+
 endsnippet
 
-snippet readfile "read file (readF)"
-std::vector<char> v;
-if (FILE *fp = fopen(${1:"filename"}, "r"))
+snippet fun "Function definition" !
+/** ${4:TODO: Brief Description}.
+  @ingroup ${6:`!p snip.rv = ( fn or "name")`}
+
+  ${7:TODO: Long Description}
+  `!p
+if t[2] != "/*arguments*/":
+    args = get_args(t[2])
+    args = format_args(args)
+    snip >> 1
+    for arg in args:
+        snip += arg
+else:
+    snip.rv = ""`
+  `!p
+snip >> 1
+if (t[3] not in ["void", ""]):
+    snip += "@return TODO"`
+ */
+${3:void} $1(${2:/*arguments*/})
 {
-	char buf[1024];
-	while(size_t len = fread(buf, 1, sizeof(buf), fp))
-		v.insert(v.end(), buf, buf + len);
-	fclose(fp);
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
+
+endsnippet
+
+snippet main "main() (main)" !
+/** ${4:TODO: Brief Description}.
+  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+
+  ${5:TODO: Long Description}
+
+  */
+
+int main(int argc, char const *argv[])
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+	return 0;
 }
 endsnippet
 
-snippet map "std::map (map)"
-std::map<${1:key}, ${2:value}> map$0;
+snippet fore "for each (iterator loop)" !
+for(${5:list<${6:string}>::iterator} ${3:it} = $1$2begin(); $3 != ${1:listName}${2:->}end(); ${4:++$3})
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
 endsnippet
 
-snippet vector "std::vector (v)"
-std::vector<${1:char}> v$0;
+snippet for "for int loop (fori)" !
+for(${4:size_t} ${2:i} = 0; $2 < ${1:count}; ${3:++$2})
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
 endsnippet
 
-snippet tp "template <typename ..> (template)"
-template <typename ${1:_InputIter}>
+snippet if "if .. (if)" !
+if(${1:/* condition */})
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
 endsnippet
 
+snippet el "else .. (else)"
+else
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
+endsnippet
+
+snippet ife "if .. else (ife)" !
+if(${1:/* condition */})
+{
+	${2:/* code */}
+}
+else
+{
+  ${3:/* else */}
+}
+endsnippet
+
+snippet tst "googleTest test" !
+/** ${3:TODO: Brief description}.
+  @ingroup ${4:`!p snip.rv = ( fn or "name")`}
+
+  ${5:TODO: Longer Description}.
+ */
+TEST ( ${1:TestGroupName}, ${2:TestName} )
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
+endsnippet
+
+snippet fxtr "googletest fixture" !b
+/** ${3:TODO: Brief Description}.
+  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+
+  ${4:TODO: Long Description}
+ */
+class ${1:`!p snip.rv = snip.basename or "name"`}
+{
+protected:
+	${0:/* setup, teardown, and data*/}
+};
+endsnippet
+snippet tstf "googletest test with fixtures" !
+/** ${3:TODO: Brief description}.
+  @ingroup ${4:`!p snip.rv = ( fn or "name")`}
+
+  ${5:TODO: Longer description.}
+ */
+TEST_F ( ${1:FixtureName}, ${2:TestName} )
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+}
+endsnippet
+
+snippet noex "expect no exception" !
+EXPECT_NO_THROW(
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+});
+endsnippet
+
+snippet noex! "assert no exception" !
+ASSERT_NO_THROW(
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+});
+endsnippet
+
+snippet aex "expect an exception" !
+EXPECT_ANY_THROW(
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+});
+endsnippet
+
+snippet aex! "assert an exception" !
+ASSERT_ANY_THROW(
+{
+	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
+});
+endsnippet
 # vim:ft=snippets:
