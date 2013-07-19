@@ -27,15 +27,15 @@ snippet ns "namespace .. (namespace)" !
 namespace${1/.+/ /m}${1:`!p snip.rv = snip.basename or "name"`}
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
-}${1/.+/ \/* /m}end of namespace: $1${1/.+/ *\/ /m}
+}${1/.+/ \/\/ /m}end of namespace: $1
 endsnippet
 
-snippet cld "class .. (class with doxygen comments)"
-/** ${3:TODO: Brief Description}.
-  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+snippet cld "class .. (class with doxygen comments)" !
+/** @brief ${3:TODO: Brief Description}.
+  @ingroup ${1:`!p snip.rv = ( snip.basename or "name")`}
 
   ${4:TODO: Long Description}
- */
+  */
 class ${1:`!p snip.rv = snip.basename or "name"`}
 {
 public:
@@ -47,75 +47,70 @@ private:
 };
 endsnippet
 
-snippet mfn "Member Function definition" !
-/** ${5:TODO: Brief Description}.
-  @ingroup ${6:`!p snip.rv = ( fn or "name")`}
+snippet mfun "Member Function definition" !
+/** @brief ${5:TODO: Brief Description}.
 
   ${7:TODO: Long Description}
   `!p
-if t[2] != "/*arguments*/":
-    args = get_args(t[2])
+if t[3] != "/*arguments*/":
+    args = get_args(t[3])
     args = format_args(args)
-    snip >> 1
     for arg in args:
-        snip += arg
+        snip += "  " + arg
 else:
-    snip.rv = ""`
-  `!p
-snip >> 1
-if (t[3] not in ["void", ""]):
-    snip += "@return TODO"`
- */
-${4:void} ${2:`!p snip.rv = ( fn or "name")$1(${3:/*arguments*/})
+    snip.rv = ""
+if (t[4] not in ["void", ""]):
+    snip += "  @return TODO"`
+  */
+${4:void} ${2:`!p snip.rv = ( snip.basename or "name")`}::$1(${3:/*arguments*/})
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
-}
+} // end of member function: $2::$1
 
 endsnippet
 
 snippet fun "Function definition" !
-/** ${4:TODO: Brief Description}.
-  @ingroup ${6:`!p snip.rv = ( fn or "name")`}
+/** @brief ${4:TODO: Brief Description}.
+  @ingroup ${6:`!p snip.rv = ( snip.basename or "name")`}
 
   ${7:TODO: Long Description}
   `!p
 if t[2] != "/*arguments*/":
     args = get_args(t[2])
     args = format_args(args)
-    snip >> 1
     for arg in args:
         snip += arg
 else:
-    snip.rv = ""`
-  `!p
-snip >> 1
+    snip.rv = ""
 if (t[3] not in ["void", ""]):
     snip += "@return TODO"`
- */
+  */
 ${3:void} $1(${2:/*arguments*/})
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
-}
+} // end of function: $1
 
 endsnippet
 
 snippet main "main() (main)" !
-/** ${4:TODO: Brief Description}.
-  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+/** @brief The main entry point for ${1:`!p snip.rv = ( snip.basename or "program-name")`}.
+  @ingroup ${2:`!p snip.rv = ( snip.basename or "name")`}
 
-  ${5:TODO: Long Description}
-
+  ${3:TODO: Long Description}
   */
 
-int main(int argc, char const *argv[])
+int main(int argc, char **argv)
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
 	return 0;
-}
+} // end of function: main
 endsnippet
 
 snippet fore "for each (iterator loop)" !
-for(${5:list<${6:string}>::iterator} ${3:it} = $1$2begin(); $3 != ${1:listName}${2:->}end(); ${4:++$3})
+for(${5:list<${6:string}>::iterator} ${3:it} = $1$2begin();
+		$3 != ${1:listName}${2:->}end();
+		${4:++$3}
+		)
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
 }
@@ -135,7 +130,7 @@ if(${1:/* condition */})
 }
 endsnippet
 
-snippet el "else .. (else)"
+snippet el "else .. (else)" !
 else
 {
 	${VISUAL}${0:${VISUAL/(.*)/(?1::\/* code *\/)/}}
@@ -153,9 +148,9 @@ else
 }
 endsnippet
 
-snippet tst "googleTest test" !
-/** ${3:TODO: Brief description}.
-  @ingroup ${4:`!p snip.rv = ( fn or "name")`}
+snippet tst "gTest TEST" !
+/** @brief ${3:TODO: Brief description}.
+  @ingroup ${4:`!p snip.rv = ( snip.basename or "name")`}
 
   ${5:TODO: Longer Description}.
  */
@@ -165,21 +160,41 @@ TEST ( ${1:TestGroupName}, ${2:TestName} )
 }
 endsnippet
 
-snippet fxtr "googletest fixture" !b
-/** ${3:TODO: Brief Description}.
-  @ingroup ${1:`!p snip.rv = ( fn or "name")`}
+snippet fxtr "gtest fixture template" !b
+/** @brief ${4:TODO: Brief Description}.
+  @ingroup ${3:`!p snip.rv = ( snip.basename or "name")`}
 
-  ${4:TODO: Long Description}
- */
-class ${1:`!p snip.rv = snip.basename or "name"`}
+  ${5:TODO: Long Description}
+  */
+class ${1:`!p snip.rv = snip.basename or "name"`} : ${2:public ::testing::Test}
 {
 protected:
-	${0:/* setup, teardown, and data*/}
+
+	/* Fixture Variables */
+	$6
+
+	/** @brief Set Up this test Fixture
+
+	  ${7:TODO: Describe this funciton.}
+	  */
+	void SetUp()
+	{
+		${8:/* code */}
+	}
+
+	/** @brief Tear Down this test Fixture
+
+	  ${9:TODO: Describe this funciton.}
+	  */
+	void SetUp()
+	{
+		${0:/* code */}
+	}
 };
 endsnippet
-snippet tstf "googletest test with fixtures" !
-/** ${3:TODO: Brief description}.
-  @ingroup ${4:`!p snip.rv = ( fn or "name")`}
+snippet tstf "gtest TEST_F" !
+/** @brief ${3:TODO: Brief description}.
+  @ingroup ${4:`!p snip.rv = ( snip.basename or "name")`}
 
   ${5:TODO: Longer description.}
  */
